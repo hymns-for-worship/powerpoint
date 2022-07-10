@@ -18,9 +18,11 @@ class SlidesView extends StatefulWidget {
     required this.onChange,
     required this.onEnd,
     this.title,
+    this.actions = const [],
   }) : super(key: key);
 
   final Widget? title;
+  final List<Widget> actions;
   final List<BaseSlide> slides;
   final Widget Function(SlidesState state, Widget child) builder;
   final Future Function(SlidesState state) onChange;
@@ -231,6 +233,7 @@ class _SlidesViewState extends State<SlidesView> {
               : AppBar(
                   title: widget.title,
                   actions: [
+                    ...widget.actions,
                     IconButton(
                       tooltip: 'Previous group',
                       icon: const Icon(Icons.navigate_before),
