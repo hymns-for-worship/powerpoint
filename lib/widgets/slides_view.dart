@@ -227,49 +227,59 @@ class _SlidesViewState extends State<SlidesView> {
         final fgColor = loading
             ? Colors.white.withOpacity(0.20)
             : Colors.white.withOpacity(0.50);
-        return Scaffold(
-          appBar: state.fullScreen
-              ? null
-              : AppBar(
-                  title: widget.title,
-                  actions: [
-                    ...widget.actions,
-                    IconButton(
-                      tooltip: 'Previous group',
-                      icon: const Icon(Icons.navigate_before),
-                      onPressed:
-                          loading ? null : () => previous(context, false),
-                    ),
-                    IconButton(
-                      tooltip: 'Previous slide',
-                      icon: const Icon(Icons.skip_previous),
-                      onPressed: loading ? null : () => previous(context),
-                    ),
-                    IconButton(
-                      tooltip: 'Next slide',
-                      icon: const Icon(Icons.skip_next),
-                      onPressed: loading ? null : () => next(context),
-                    ),
-                    IconButton(
-                      tooltip: 'Next group',
-                      icon: const Icon(Icons.navigate_next),
-                      onPressed: loading ? null : () => next(context, false),
-                    ),
-                    IconButton(
-                      tooltip: 'Enter fullscreen',
-                      icon: const Icon(Icons.fullscreen),
-                      onPressed: loading
-                          ? null
-                          : () => updateState(state.copyWith(
-                                fullScreen: true,
-                              )),
-                    ),
-                  ],
-                ),
-          body: Container(
-            color: bgColor,
-            child: LayoutBuilder(
-              builder: (context, dimens) => GestureDetector(
+        return LayoutBuilder(builder: (context, dimens) {
+          final slideControls = <Widget>[
+            IconButton(
+              tooltip: 'Previous group',
+              icon: const Icon(Icons.navigate_before),
+              onPressed: loading ? null : () => previous(context, false),
+            ),
+            IconButton(
+              tooltip: 'Previous slide',
+              icon: const Icon(Icons.skip_previous),
+              onPressed: loading ? null : () => previous(context),
+            ),
+            IconButton(
+              tooltip: 'Enter fullscreen',
+              icon: const Icon(Icons.fullscreen),
+              onPressed: loading
+                  ? null
+                  : () => updateState(state.copyWith(fullScreen: true)),
+            ),
+            IconButton(
+              tooltip: 'Next slide',
+              icon: const Icon(Icons.skip_next),
+              onPressed: loading ? null : () => next(context),
+            ),
+            IconButton(
+              tooltip: 'Next group',
+              icon: const Icon(Icons.navigate_next),
+              onPressed: loading ? null : () => next(context, false),
+            ),
+          ];
+          final isMobile = dimens.maxWidth < 600;
+          return Scaffold(
+            appBar: state.fullScreen
+                ? null
+                : AppBar(
+                    title: widget.title,
+                    actions: [
+                      ...widget.actions,
+                      if (!isMobile) ...slideControls,
+                    ],
+                    bottom: !isMobile
+                        ? null
+                        : PreferredSize(
+                            preferredSize: const Size.fromHeight(48),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: slideControls,
+                            ),
+                          ),
+                  ),
+            body: Container(
+              color: bgColor,
+              child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onLongPress: () => updateState(state.copyWith(
                   fullScreen: !state.fullScreen,
@@ -364,8 +374,8 @@ class _SlidesViewState extends State<SlidesView> {
                 ),
               ),
             ),
-          ),
-        );
+          );
+        });
       },
     );
   }
