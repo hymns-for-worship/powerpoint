@@ -230,12 +230,12 @@ class _SlidesViewState extends State<SlidesView> {
         return LayoutBuilder(builder: (context, dimens) {
           final slideControls = <Widget>[
             IconButton(
-              tooltip: 'Previous group',
+              tooltip: 'Previous slide',
               icon: const Icon(Icons.navigate_before),
               onPressed: loading ? null : () => previous(context, false),
             ),
             IconButton(
-              tooltip: 'Previous slide',
+              tooltip: 'Previous group',
               icon: const Icon(Icons.skip_previous),
               onPressed: loading ? null : () => previous(context),
             ),
@@ -247,12 +247,12 @@ class _SlidesViewState extends State<SlidesView> {
                   : () => updateState(state.copyWith(fullScreen: true)),
             ),
             IconButton(
-              tooltip: 'Next slide',
+              tooltip: 'Next group',
               icon: const Icon(Icons.skip_next),
               onPressed: loading ? null : () => next(context),
             ),
             IconButton(
-              tooltip: 'Next group',
+              tooltip: 'Next slide',
               icon: const Icon(Icons.navigate_next),
               onPressed: loading ? null : () => next(context, false),
             ),
@@ -328,7 +328,7 @@ class _SlidesViewState extends State<SlidesView> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              tooltip: 'Previous group',
+                              tooltip: 'Previous slide',
                               icon: const Icon(Icons.navigate_before),
                               onPressed: loading
                                   ? null
@@ -336,7 +336,7 @@ class _SlidesViewState extends State<SlidesView> {
                               color: fgColor,
                             ),
                             IconButton(
-                              tooltip: 'Previous slide',
+                              tooltip: 'Previous group',
                               icon: const Icon(Icons.skip_previous),
                               onPressed:
                                   loading ? null : () => previous(context),
@@ -354,13 +354,13 @@ class _SlidesViewState extends State<SlidesView> {
                               color: fgColor,
                             ),
                             IconButton(
-                              tooltip: 'Next slide',
+                              tooltip: 'Next group',
                               icon: const Icon(Icons.skip_next),
                               onPressed: loading ? null : () => next(context),
                               color: fgColor,
                             ),
                             IconButton(
-                              tooltip: 'Next group',
+                              tooltip: 'Next slide',
                               icon: const Icon(Icons.navigate_next),
                               onPressed:
                                   loading ? null : () => next(context, false),
