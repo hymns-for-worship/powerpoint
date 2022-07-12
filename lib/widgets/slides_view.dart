@@ -318,57 +318,58 @@ class _SlidesViewState extends State<SlidesView> {
                     fit: StackFit.expand,
                     children: [
                       Positioned.fill(child: widget.builder(state, current)),
-                      AnimatedPositioned(
-                        duration: kThemeAnimationDuration,
-                        bottom: state.showControls ? 10 : -100,
-                        left: 0,
-                        right: 0,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              tooltip: 'Previous slide',
-                              icon: const Icon(Icons.navigate_before),
-                              onPressed: loading
-                                  ? null
-                                  : () => previous(context),
-                              color: fgColor,
-                            ),
-                            IconButton(
-                              tooltip: 'Previous group',
-                              icon: const Icon(Icons.skip_previous),
-                              onPressed:
-                                  loading ? null : () => previous(context, false),
-                              color: fgColor,
-                            ),
-                            IconButton(
-                              tooltip:
-                                  '${state.fullScreen ? 'Exit' : 'Enter'} fullscreen',
-                              icon: Icon(state.fullScreen
-                                  ? Icons.fullscreen_exit
-                                  : Icons.fullscreen),
-                              onPressed: () => updateState(state.copyWith(
-                                fullScreen: !state.fullScreen,
-                              )),
-                              color: fgColor,
-                            ),
-                            IconButton(
-                              tooltip: 'Next group',
-                              icon: const Icon(Icons.skip_next),
-                              onPressed: loading ? null : () => next(context, false),
-                              color: fgColor,
-                            ),
-                            IconButton(
-                              tooltip: 'Next slide',
-                              icon: const Icon(Icons.navigate_next),
-                              onPressed:
-                                  loading ? null : () => next(context),
-                              color: fgColor,
-                            ),
-                          ],
+                      if (state.fullScreen)
+                        AnimatedPositioned(
+                          duration: kThemeAnimationDuration,
+                          bottom: state.showControls ? 10 : -100,
+                          left: 0,
+                          right: 0,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: 'Previous slide',
+                                icon: const Icon(Icons.navigate_before),
+                                onPressed:
+                                    loading ? null : () => previous(context),
+                                color: fgColor,
+                              ),
+                              IconButton(
+                                tooltip: 'Previous group',
+                                icon: const Icon(Icons.skip_previous),
+                                onPressed: loading
+                                    ? null
+                                    : () => previous(context, false),
+                                color: fgColor,
+                              ),
+                              IconButton(
+                                tooltip:
+                                    '${state.fullScreen ? 'Exit' : 'Enter'} fullscreen',
+                                icon: Icon(state.fullScreen
+                                    ? Icons.fullscreen_exit
+                                    : Icons.fullscreen),
+                                onPressed: () => updateState(state.copyWith(
+                                  fullScreen: !state.fullScreen,
+                                )),
+                                color: fgColor,
+                              ),
+                              IconButton(
+                                tooltip: 'Next group',
+                                icon: const Icon(Icons.skip_next),
+                                onPressed:
+                                    loading ? null : () => next(context, false),
+                                color: fgColor,
+                              ),
+                              IconButton(
+                                tooltip: 'Next slide',
+                                icon: const Icon(Icons.navigate_next),
+                                onPressed: loading ? null : () => next(context),
+                                color: fgColor,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
