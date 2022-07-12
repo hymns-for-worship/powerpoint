@@ -1,7 +1,7 @@
 name: slide_viewer
 description: Slides Viewer
 publish_to: "none"
-version: 1.0.0+4
+version: 1.0.0+5
 
 environment:
   sdk: ">=2.18.0-189.0.dev <3.0.0"
