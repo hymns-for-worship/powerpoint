@@ -19,6 +19,7 @@ class SlidesView extends StatefulWidget {
     this.title,
     this.options = const ExportOptions(),
     this.actions = const [],
+    this.background = Colors.black,
   }) : super(key: key);
 
   final Widget? title;
@@ -28,6 +29,7 @@ class SlidesView extends StatefulWidget {
   final FutureOr Function(SlidesState state)? onChange;
   final FutureOr Function() onEnd;
   final ExportOptions options;
+  final Color background;
 
   @override
   State<SlidesView> createState() => _SlidesViewState();
@@ -166,9 +168,9 @@ class _SlidesViewState extends State<SlidesView> {
       valueListenable: state,
       builder: (context, state, child) {
         final current = buildCurrent(context, state);
-        const bgColor = Colors.black;
-        final fgColor = loading
-            ? Colors.white.withOpacity(0.20)
+        final bgColor = widget.background;
+        final fgColor = bgColor.computeLuminance() > 0.5
+            ? Colors.black
             : Colors.white.withOpacity(0.50);
         return LayoutBuilder(builder: (context, dimens) {
           final slideControls = <Widget>[
