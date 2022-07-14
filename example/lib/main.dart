@@ -28,6 +28,7 @@ class PowerPointExample extends StatelessWidget {
   Widget build(BuildContext context) {
     return SlidesView(
       title: const Text('Presentation Example'),
+      background: Colors.grey.shade900,
       slides: [
         TextSlide(
           name: '1',
