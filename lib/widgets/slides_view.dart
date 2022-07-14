@@ -1,32 +1,33 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../classes/base.dart';
-import '../classes/color.dart';
-import '../classes/group.dart';
-import '../classes/image.dart';
-import '../classes/state.dart';
-import '../classes/text.dart';
+
+import '../assets/generate.dart';
+import '../classes/index.dart';
+import '../extensions/index.dart';
+import '../pptx_export/pptx_export.dart';
+import 'render_slide.dart';
 
 class SlidesView extends StatefulWidget {
   const SlidesView({
     Key? key,
     required this.slides,
-    required this.builder,
-    required this.onChange,
+    this.builder,
+    this.onChange,
     required this.onEnd,
     this.title,
+    this.options = const ExportOptions(),
     this.actions = const [],
   }) : super(key: key);
 
   final Widget? title;
   final List<Widget> actions;
   final List<BaseSlide> slides;
-  final Widget Function(SlidesState state, Widget child) builder;
-  final Future Function(SlidesState state) onChange;
-  final Future Function() onEnd;
+  final Widget Function(SlidesState state, Widget child)? builder;
+  final FutureOr Function(SlidesState state)? onChange;
+  final FutureOr Function() onEnd;
+  final ExportOptions options;
 
   @override
   State<SlidesView> createState() => _SlidesViewState();
@@ -35,10 +36,11 @@ class SlidesView extends StatefulWidget {
 class _SlidesViewState extends State<SlidesView> {
   late final state = ValueNotifier(SlidesState(
     slides: widget.slides,
-    currentIndex: 0,
-    groupIndex: 0,
+    currentSlide: null,
     showControls: true,
     fullScreen: false,
+    total: widget.slides.total,
+    index: 0,
   ));
   final focusNode = FocusNode(skipTraversal: true);
   Timer? controlsTimer;
@@ -51,74 +53,37 @@ class _SlidesViewState extends State<SlidesView> {
     updateState(current.copyWith(showControls: true));
     controlsTimer?.cancel();
     controlsTimer = Timer(const Duration(seconds: 4), () {
-      updateState(current.copyWith(showControls: false));
+      updateState(state.value.copyWith(showControls: false));
     });
   }
 
   Future<void> next(BuildContext context, [bool group = true]) async {
     final state = this.state.value;
-    final idx = max(0, min(state.slides.length - 1, state.currentIndex));
-    final current = state.slides[idx];
 
-    if (group && current is SlideGroup) {
-      final groupSlides = current.children;
-      final groupIndex = max(0, min(groupSlides.length - 1, state.groupIndex));
-
-      final groupSlide = getSlide(idx, groupIndex + 1);
-      if (groupSlide != null) {
-        await updateState(state.copyWith(
-          currentIndex: idx,
-          groupIndex: groupIndex + 1,
-        ));
-        return;
-      }
-    }
-
-    final targetSlide = getSlide(idx + 1, 0);
-    if (targetSlide != null) {
+    if (state.slides.canGoNext) {
+      final nextSlide = state.slides.next(state.index);
+      final nextIdx = state.slides.getIndex(nextSlide);
       await updateState(state.copyWith(
-        currentIndex: idx + 1,
-        groupIndex: 0,
+        currentSlide: nextSlide,
+        index: nextIdx,
       ));
       return;
     }
 
+    // ignore: use_build_context_synchronously
     end(context);
   }
 
   Future<void> previous(BuildContext context, [bool group = true]) async {
     if (loading) return;
     final state = this.state.value;
-    final idx = max(0, min(state.slides.length - 1, state.currentIndex));
-    final current = state.slides[idx];
 
-    if (group && current is SlideGroup) {
-      final groupSlides = current.children;
-      final groupIndex = max(0, min(groupSlides.length - 1, state.groupIndex));
-
-      final groupSlide = getSlide(idx, groupIndex - 1);
-      if (groupSlide != null) {
-        await updateState(state.copyWith(
-          currentIndex: idx,
-          groupIndex: groupIndex - 1,
-        ));
-        return;
-      }
-    }
-
-    final targetSlide = getSlide(idx - 1, null);
-    if (targetSlide != null) {
-      if (group && targetSlide is SlideGroup) {
-        await updateState(state.copyWith(
-          currentIndex: idx - 1,
-          groupIndex: targetSlide.children.length - 1,
-        ));
-        return;
-      }
-
+    if (state.slides.canGoPrevious) {
+      final previousSlide = state.slides.previous(state.index);
+      final previousIdx = state.slides.getIndex(previousSlide);
       await updateState(state.copyWith(
-        currentIndex: idx - 1,
-        groupIndex: 0,
+        currentSlide: previousSlide,
+        index: previousIdx,
       ));
       return;
     }
@@ -129,80 +94,38 @@ class _SlidesViewState extends State<SlidesView> {
   Future<void> preload(BuildContext context) async {
     if (loading) return;
     final state = this.state.value;
-    final idx = max(0, min(state.slides.length - 1, state.currentIndex));
+    final slides = state.slides.flatten;
 
-    // Check next
-    if (idx < state.slides.length - 1) {
-      final nextSlide = state.slides[idx + 1];
-      if (nextSlide is ImageSlide) {
-        await nextSlide.preload(context);
-      }
-      // Check if group
-      if (nextSlide is SlideGroup) {
-        final groupSlides = nextSlide.children;
-        final groupIndex =
-            max(0, min(groupSlides.length - 1, state.groupIndex));
-
-        if (groupIndex < groupSlides.length - 1) {
-          final nextGroupSlide = groupSlides[groupIndex + 1];
-          if (nextGroupSlide is ImageSlide) {
-            await nextGroupSlide.preload(context);
-          }
-        }
+    final images = <ImageSlide>[];
+    for (final slide in slides) {
+      if (slide is ImageSlide) {
+        images.add(slide);
       }
     }
 
-    // Check previous
-    if (idx > 0) {
-      final prevSlide = state.slides[idx - 1];
-      if (prevSlide is ImageSlide) {
-        await prevSlide.preload(context);
-      }
-      // Check if group
-      if (prevSlide is SlideGroup) {
-        final groupSlides = prevSlide.children;
-        final groupIndex =
-            max(0, min(groupSlides.length - 1, state.groupIndex));
-
-        if (groupIndex > 0) {
-          final prevGroupSlide = groupSlides[groupIndex - 1];
-          if (prevGroupSlide is ImageSlide) {
-            await prevGroupSlide.preload(context);
-          }
-        }
-      }
-    }
+    await Future.wait(images.map((e) => e.preload(context)).toList());
   }
 
   Future<void> end(BuildContext context) async {
     await widget.onEnd();
   }
 
-  Future<void> updateState(SlidesState value) async {
-    state.value = value;
-    loading = true;
-    updateDebounce?.cancel();
-    updateDebounce = Timer(const Duration(milliseconds: 10), () async {
-      await widget.onChange(value).catchError((error) {});
-    });
-    loading = false;
-  }
-
-  Future<void> setSlideState(int index, int groupIndex) async {
-    debugPrint('state: $index-$groupIndex');
-    await updateState(state.value.copyWith(
-      groupIndex: groupIndex,
-      currentIndex: index,
+  Future<void> start(BuildContext context) async {
+    showControls();
+    final state = this.state.value;
+    updateState(state.copyWith(
+      currentSlide: state.slides.first,
     ));
   }
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      showControls();
-      setSlideState(0, 0);
+  Future<void> updateState(SlidesState value) async {
+    state.value = value.copyWith();
+    loading = true;
+    updateDebounce?.cancel();
+    updateDebounce = Timer(const Duration(milliseconds: 10), () async {
+      await widget.onChange?.call(value);
     });
+    loading = false;
   }
 
   BaseSlide? getSlide(int index, int? groupIndex) {
@@ -215,6 +138,26 @@ class _SlidesViewState extends State<SlidesView> {
     } catch (e) {
       return null;
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      start(context);
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant SlidesView oldWidget) {
+    if (oldWidget.slides != widget.slides) {
+      state.value = state.value.copyWith(
+        slides: widget.slides,
+        total: widget.slides.total,
+      );
+      start(context);
+    }
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -259,24 +202,7 @@ class _SlidesViewState extends State<SlidesView> {
           ];
           final isMobile = dimens.maxWidth < 600;
           return Scaffold(
-            appBar: state.fullScreen
-                ? null
-                : AppBar(
-                    title: widget.title,
-                    actions: [
-                      ...widget.actions,
-                      if (!isMobile) ...slideControls,
-                    ],
-                    bottom: !isMobile
-                        ? null
-                        : PreferredSize(
-                            preferredSize: const Size.fromHeight(48),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: slideControls,
-                            ),
-                          ),
-                  ),
+            appBar: buildAppBar(context, state, isMobile, slideControls),
             body: Container(
               color: bgColor,
               child: GestureDetector(
@@ -317,7 +243,13 @@ class _SlidesViewState extends State<SlidesView> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Positioned.fill(child: widget.builder(state, current)),
+                      Positioned.fill(
+                        child: widget.builder?.call(
+                              state,
+                              current,
+                            ) ??
+                            current,
+                      ),
                       if (state.fullScreen)
                         AnimatedPositioned(
                           duration: kThemeAnimationDuration,
@@ -385,27 +317,58 @@ class _SlidesViewState extends State<SlidesView> {
     if (state.slides.isEmpty) {
       return const Center(child: Text('No slides found'));
     }
-    if (state.currentIndex < 0 || state.currentIndex >= state.slides.length) {
+    final current = state.slides.getSlide(state.index);
+    if (current == null) {
       return const Center(child: Text('Slide not found'));
     }
-    final current = state.slides[state.currentIndex];
-    return renderSlide(context, state, current);
+    return Center(
+      child: AspectRatio(
+        aspectRatio: widget.options.layout.ratio,
+        child: RenderSlide(state: state, slide: current),
+      ),
+    );
   }
 
-  Widget renderSlide(BuildContext context, SlidesState state, BaseSlide slide) {
-    if (slide is ImageSlide) {
-      return slide.build(context);
-    }
-    if (slide is TextSlide) {
-      return slide.build(context);
-    }
-    if (slide is ColorSlide) {
-      return slide.build(context);
-    }
-    if (slide is SlideGroup) {
-      final child = slide.children[state.groupIndex];
-      return renderSlide(context, state, child);
-    }
-    return const Center(child: Text('Slide not supported'));
+  AppBar? buildAppBar(
+    BuildContext context,
+    SlidesState state,
+    bool mobile,
+    List<Widget> actions,
+  ) {
+    if (state.fullScreen) return null;
+    final exportIcon = IconButton(
+      icon: const Icon(Icons.file_download),
+      tooltip: 'Export',
+      onPressed: () {
+        final o = widget.options;
+        state.toPowerPoint(context, title: o.title, layout: o.layout);
+      },
+    );
+    return AppBar(
+      title: widget.title,
+      actions: [
+        ...widget.actions,
+        if (!mobile) ...actions,
+        exportIcon,
+      ],
+      bottom: !mobile
+          ? null
+          : PreferredSize(
+              preferredSize: const Size.fromHeight(48),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: actions,
+              ),
+            ),
+    );
   }
+}
+
+class ExportOptions {
+  const ExportOptions({
+    this.title = 'untitled',
+    this.layout = LayoutOptions.LAYOUT_16x9,
+  });
+  final String title;
+  final LayoutOptions layout;
 }

@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 
+import '../extensions/index.dart';
 import 'color.dart';
 
 class TextSlide extends ColorSlide {
   TextSlide({
-    required String name,
-    required Color color,
+    required super.color,
+    required super.name,
     required this.text,
     required this.style,
-  }) : super(name: name, color: color);
+    this.x = "2%",
+    this.y = "95%",
+  });
 
   final String text;
+  final String x;
+  final String y;
   final TextStyle style;
 
   @override
@@ -37,5 +42,18 @@ class TextSlide extends ColorSlide {
         ],
       ),
     );
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'text': text,
+      'name': name,
+      'color': color.toHex(leadingHashSign: false),
+      'textColor': style.color!.toHex(leadingHashSign: false),
+      'textSize': style.fontSize,
+      'x': x,
+      'y': y,
+    };
   }
 }
