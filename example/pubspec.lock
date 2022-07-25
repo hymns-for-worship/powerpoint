@@ -74,7 +74,7 @@ packages:
   file_utils:
     dependency: transitive
     description:
-      path: "../packages/file_utils"
+      path: "../../file_utils"
       relative: true
     source: path
     version: "0.0.2+2"
