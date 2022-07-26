@@ -5,5 +5,7 @@ abstract class BaseSlide {
 
   final String name;
 
+  final Map<String, dynamic> data = {};
+
   Map<String, dynamic> toJson();
 }
