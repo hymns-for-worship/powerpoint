@@ -48,6 +48,7 @@ class _SlidesViewState extends State<SlidesView> {
   Timer? controlsTimer;
   Timer? updateDebounce;
   bool loading = false;
+  late List<BaseSlide> slides = widget.slides.flatten();
 
   void showControls() {
     final current = state.value;
@@ -62,41 +63,65 @@ class _SlidesViewState extends State<SlidesView> {
   Future<void> next(BuildContext context, [bool group = true]) async {
     final state = this.state.value;
 
-    if (state.slides.canGoNext) {
-      final nextSlide = state.slides.next(state.index);
-      final nextIdx = state.slides.getIndex(nextSlide);
-      await updateState(state.copyWith(
-        currentSlide: nextSlide,
-        index: nextIdx,
-      ));
+    debugPrint('next: ${state.index}/${state.total}');
+
+    // if (state.slides.canGoNext) {
+    //   final nextSlide = state.slides.next(state.index);
+    //   final nextIdx = state.slides.getIndex(nextSlide);
+    //   await updateState(state.copyWith(
+    //     currentSlide: nextSlide,
+    //     index: nextIdx,
+    //   ));
+    //   return;
+    // }
+    final currentIdx = state.index;
+    final nextIdx = currentIdx + 1;
+    if (nextIdx >= state.total) {
+      // ignore: use_build_context_synchronously
+      end(context);
       return;
     }
 
-    // ignore: use_build_context_synchronously
-    end(context);
+    final nextSlide = slides[nextIdx];
+    await updateState(state.copyWith(
+      currentSlide: nextSlide,
+      index: nextIdx,
+    ));
   }
 
   Future<void> previous(BuildContext context, [bool group = true]) async {
     if (loading) return;
     final state = this.state.value;
 
-    if (state.slides.canGoPrevious) {
-      final previousSlide = state.slides.previous(state.index);
-      final previousIdx = state.slides.getIndex(previousSlide);
-      await updateState(state.copyWith(
-        currentSlide: previousSlide,
-        index: previousIdx,
-      ));
+    debugPrint('previous: ${state.index}/${state.total}');
+
+    // if (state.slides.canGoPrevious) {
+    //   final previousSlide = state.slides.previous(state.index);
+    //   final previousIdx = state.slides.getIndex(previousSlide);
+    //   await updateState(state.copyWith(
+    //     currentSlide: previousSlide,
+    //     index: previousIdx,
+    //   ));
+    //   return;
+    // }
+
+    final currentIdx = state.index;
+    final previousIdx = currentIdx - 1;
+    if (previousIdx < 0) {
+      // ignore: use_build_context_synchronously
+      // Start of presentation
       return;
     }
 
-    // Start of presentation
+    final previousSlide = slides[previousIdx];
+    await updateState(state.copyWith(
+      currentSlide: previousSlide,
+      index: previousIdx,
+    ));
   }
 
   Future<void> preload(BuildContext context) async {
     if (loading) return;
-    final state = this.state.value;
-    final slides = state.slides.flatten;
 
     final images = <ImageSlide>[];
     for (final slide in slides) {
@@ -116,7 +141,7 @@ class _SlidesViewState extends State<SlidesView> {
     showControls();
     final state = this.state.value;
     updateState(state.copyWith(
-      currentSlide: state.slides.first,
+      currentSlide: slides.first,
     ));
   }
 
@@ -179,11 +204,11 @@ class _SlidesViewState extends State<SlidesView> {
               icon: const Icon(Icons.navigate_before),
               onPressed: loading ? null : () => previous(context),
             ),
-            IconButton(
-              tooltip: 'Previous group',
-              icon: const Icon(Icons.skip_previous),
-              onPressed: loading ? null : () => previous(context, false),
-            ),
+            // IconButton(
+            //   tooltip: 'Previous group',
+            //   icon: const Icon(Icons.skip_previous),
+            //   onPressed: loading ? null : () => previous(context, false),
+            // ),
             IconButton(
               tooltip: 'Enter fullscreen',
               icon: const Icon(Icons.fullscreen),
@@ -191,11 +216,11 @@ class _SlidesViewState extends State<SlidesView> {
                   ? null
                   : () => updateState(state.copyWith(fullScreen: true)),
             ),
-            IconButton(
-              tooltip: 'Next group',
-              icon: const Icon(Icons.skip_next),
-              onPressed: loading ? null : () => next(context, false),
-            ),
+            // IconButton(
+            //   tooltip: 'Next group',
+            //   icon: const Icon(Icons.skip_next),
+            //   onPressed: loading ? null : () => next(context, false),
+            // ),
             IconButton(
               tooltip: 'Next slide',
               icon: const Icon(Icons.navigate_next),
@@ -246,11 +271,7 @@ class _SlidesViewState extends State<SlidesView> {
                     fit: StackFit.expand,
                     children: [
                       Positioned.fill(
-                        child: widget.builder?.call(
-                              state,
-                              current,
-                            ) ??
-                            current,
+                        child: widget.builder?.call(state, current) ?? current,
                       ),
                       if (state.fullScreen)
                         AnimatedPositioned(
@@ -269,14 +290,14 @@ class _SlidesViewState extends State<SlidesView> {
                                     loading ? null : () => previous(context),
                                 color: fgColor,
                               ),
-                              IconButton(
-                                tooltip: 'Previous group',
-                                icon: const Icon(Icons.skip_previous),
-                                onPressed: loading
-                                    ? null
-                                    : () => previous(context, false),
-                                color: fgColor,
-                              ),
+                              // IconButton(
+                              //   tooltip: 'Previous group',
+                              //   icon: const Icon(Icons.skip_previous),
+                              //   onPressed: loading
+                              //       ? null
+                              //       : () => previous(context, false),
+                              //   color: fgColor,
+                              // ),
                               IconButton(
                                 tooltip:
                                     '${state.fullScreen ? 'Exit' : 'Enter'} fullscreen',
@@ -288,13 +309,13 @@ class _SlidesViewState extends State<SlidesView> {
                                 )),
                                 color: fgColor,
                               ),
-                              IconButton(
-                                tooltip: 'Next group',
-                                icon: const Icon(Icons.skip_next),
-                                onPressed:
-                                    loading ? null : () => next(context, false),
-                                color: fgColor,
-                              ),
+                              // IconButton(
+                              //   tooltip: 'Next group',
+                              //   icon: const Icon(Icons.skip_next),
+                              //   onPressed:
+                              //       loading ? null : () => next(context, false),
+                              //   color: fgColor,
+                              // ),
                               IconButton(
                                 tooltip: 'Next slide',
                                 icon: const Icon(Icons.navigate_next),
@@ -316,10 +337,10 @@ class _SlidesViewState extends State<SlidesView> {
   }
 
   Widget buildCurrent(BuildContext context, SlidesState state) {
-    if (state.slides.isEmpty) {
+    if (slides.isEmpty) {
       return const Center(child: Text('No slides found'));
     }
-    final current = state.slides.getSlide(state.index);
+    final current = slides.getSlide(state.index);
     if (current == null) {
       return const Center(child: Text('Slide not found'));
     }

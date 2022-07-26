@@ -31,7 +31,7 @@ extension SlidesExportUtils on SlidesState {
 
     final presJson = {
       'title': title,
-      'slides': slides.flatten,
+      'slides': slides.flatten(),
       'layout': describeEnum(layout),
     }.clone();
 

@@ -1,13 +1,11 @@
-import 'package:flutter/material.dart';
-
 import '../classes/index.dart';
 
 extension SlidesUtils on List<BaseSlide> {
-  List<BaseSlide> get flatten {
+  List<BaseSlide> flatten() {
     var value = <BaseSlide>[];
     for (var slide in this) {
       if (slide is SlideGroup) {
-        value.addAll(slide.flatten);
+        value.addAll(slide.flatten());
       } else {
         value.add(slide);
       }
@@ -15,14 +13,14 @@ extension SlidesUtils on List<BaseSlide> {
     return value;
   }
 
-  int get total => flatten.length;
+  int get total => flatten().length;
 
   int getIndex(BaseSlide? slide) {
     if (slide == null) return -1;
-    return flatten.indexOf(slide);
+    return flatten().indexOf(slide);
   }
 
-  BaseSlide? getSlide(int index) => flatten[index];
+  BaseSlide? getSlide(int index) => flatten()[index];
 
   BaseSlide? next(int current) {
     if (current + 1 >= total) return null;

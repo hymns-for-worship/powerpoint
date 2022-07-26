@@ -21,7 +21,7 @@ extension SlidesExportUtils on SlidesState {
     final isMobile =
         !kIsWeb && (p == TargetPlatform.iOS || p == TargetPlatform.android);
     final sb = StringBuffer();
-    for (final result in slides.flatten) {
+    for (final result in slides.flatten()) {
       String color = '000000';
       if (result is ColorSlide) {
         color = result.color.toHex(leadingHashSign: false);

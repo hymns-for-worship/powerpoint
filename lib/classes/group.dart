@@ -20,11 +20,11 @@ class SlideGroup extends BaseSlide {
     return value;
   }
 
-  List<BaseSlide> get flatten {
+  List<BaseSlide> flatten() {
     var value = <BaseSlide>[];
     for (var slide in children) {
       if (slide is SlideGroup) {
-        value.addAll(slide.flatten);
+        value.addAll(slide.flatten());
       } else {
         value.add(slide);
       }
