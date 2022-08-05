@@ -177,7 +177,7 @@ class _SlidesViewState extends State<SlidesView> {
 
   @override
   void didUpdateWidget(covariant SlidesView oldWidget) {
-    if (oldWidget.slides != widget.slides) {
+    if (oldWidget.slides.length != widget.slides.length) {
       state.value = state.value.copyWith(
         slides: widget.slides,
         total: widget.slides.total,
