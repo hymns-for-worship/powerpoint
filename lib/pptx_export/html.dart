@@ -29,9 +29,22 @@ extension SlidesExportUtils on SlidesState {
       await Future.delayed(const Duration(milliseconds: 100));
     }
 
+    final results = slides.flatten();
+    final output = <Map<String, dynamic>>[];
+
+    for (var i = 0; i < results.length; i++) {
+      final slide = results[i];
+      final data = slide.toJson();
+      if (slide is LazyImageSlide) {
+        final bytes = await slide.bytes;
+        data['data'] = bytes;
+      }
+      output.add(data);
+    }
+
     final presJson = {
       'title': title,
-      'slides': slides.flatten(),
+      'slides': output,
       'layout': describeEnum(layout),
     }.clone();
 

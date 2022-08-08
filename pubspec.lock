@@ -77,7 +77,7 @@ packages:
       path: "../file_utils"
       relative: true
     source: path
-    version: "0.0.2+2"
+    version: "0.0.2+3"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -293,7 +293,7 @@ packages:
       name: source_span
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.9.0"
+    version: "1.9.1"
   stack_trace:
     dependency: transitive
     description:

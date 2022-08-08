@@ -9,7 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../assets/generate.dart';
 import '../classes/index.dart';
-import '../extensions/color.dart';
 import '../extensions/index.dart';
 
 extension SlidesExportUtils on SlidesState {
@@ -35,6 +34,12 @@ extension SlidesExportUtils on SlidesState {
       } else if (result is ImageSlide) {
         sb.writeln('  slide.background = {');
         sb.writeln('    data: "image/png;base64,${result.bytes}",');
+        sb.writeln('    color: "$color",');
+        sb.writeln('  };');
+      } else if (result is LazyImageSlide) {
+        final bytes = await result.bytes;
+        sb.writeln('  slide.background = {');
+        sb.writeln('    data: "image/png;base64,$bytes",');
         sb.writeln('    color: "$color",');
         sb.writeln('  };');
       } else if (result is ColorSlide) {

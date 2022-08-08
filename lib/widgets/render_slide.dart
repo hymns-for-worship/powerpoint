@@ -18,6 +18,9 @@ class RenderSlide extends StatelessWidget {
     if (base is ImageSlide) {
       return base.build(context);
     }
+    if (base is LazyImageSlide) {
+      return base.build(context);
+    }
     if (base is TextSlide) {
       return base.build(context);
     }
