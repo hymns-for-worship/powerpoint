@@ -229,6 +229,7 @@ class _SlidesViewState extends State<SlidesView> {
           ];
           final isMobile = dimens.maxWidth < 600;
           return Scaffold(
+            resizeToAvoidBottomInset: false,
             appBar: buildAppBar(context, state, isMobile, slideControls),
             body: Container(
               color: bgColor,

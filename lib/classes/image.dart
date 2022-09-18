@@ -58,7 +58,7 @@ class LazyImageSlide extends ColorSlide {
           if (snapshot.data == null) {
             return Container(
               color: color,
-              child: Center(
+              child: const Center(
                 child: CircularProgressIndicator(),
               ),
             );
